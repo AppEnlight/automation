@@ -21,16 +21,16 @@
   user: name=appenlight_elasticsearch generate_ssh_key=yes ssh_key_bits=2048
 
 - name: check if archive exists
-  stat: path=/home/appenlight_elasticsearch/elasticsearch-2.3.1.tar.gz get_checksum=true
+  stat: path=/home/appenlight_elasticsearch/elasticsearch-2.4.6.tar.gz get_checksum=true
   register: sym
 
 - name: grab elasticsearch
   become_user: appenlight_elasticsearch
-  get_url: url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.3.1.tar.gz dest=/home/appenlight_elasticsearch/elasticsearch-2.3.1.tar.gz mode=0660 validate_certs=no
-  when: not sym.stat.exists or sym.stat.checksum != '387c5f045843339d486203b0048ff8911e9c8c54'
+  get_url: url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.6.tar.gz dest=/home/appenlight_elasticsearch/elasticsearch-2.4.6.tar.gz mode=0660 validate_certs=no
+  when: not sym.stat.exists or sym.stat.checksum != 'c3441bef89cd91206edf3cf3bd5c4b62550e60a9'
 
 - name: check if archive exists
-  stat: path=/home/appenlight_elasticsearch/elasticsearch-2.3.1.tar.gz get_checksum=true
+  stat: path=/home/appenlight_elasticsearch/elasticsearch-2.4.6.tar.gz get_checksum=true
   register: sym
 
 - name: checking checksum
@@ -39,14 +39,14 @@
 
 - name: unpack elasticsearch
   become_user: appenlight_elasticsearch
-  unarchive: src=/home/appenlight_elasticsearch/elasticsearch-2.3.1.tar.gz dest=/home/appenlight_elasticsearch/ copy=no
+  unarchive: src=/home/appenlight_elasticsearch/elasticsearch-2.4.6.tar.gz dest=/home/appenlight_elasticsearch/ copy=no
 
 - name: ensure no es present form previous steps
   file: path=/home/appenlight_elasticsearch/elasticsearch state=absent
 
 - name: mv elasticsearch
   become_user: appenlight_elasticsearch
-  command: mv "/home/appenlight_elasticsearch/elasticsearch-2.3.1" /home/appenlight_elasticsearch/elasticsearch
+  command: mv "/home/appenlight_elasticsearch/elasticsearch-2.4.6" /home/appenlight_elasticsearch/elasticsearch
 
 - name: add elasticsearch config
   become_user: appenlight_elasticsearch

@@ -1,0 +1,4 @@
+elasticsearch_ram: 2gb
+appenlight_encryption_secret: ENCRYPTION_SECRET
+appenlight_authtkt_secret: AUTHTKT_SECRET
+appenlight_redis_session_secret: REDIS_SESSION_SECRET

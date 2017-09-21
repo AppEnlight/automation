@@ -1,0 +1,7 @@
+{% for item in bind_zones %}
+zone "{{ item.origin }}" {
+type    master;
+file    "/etc/bind/zones/{{ item.origin }}.db";
+notify    YES;
+};
+{% endfor %}

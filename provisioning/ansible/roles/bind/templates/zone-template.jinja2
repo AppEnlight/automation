@@ -1,0 +1,45 @@
+{% set nameservers = item.nameservers | default(bind_default_nameservers) %}
+{% set in_a = item.in_a | default(bind_default_in_a)  %}
+{% set zone_serial = item.serial | default(zone_serial['stdout'])  %}
+{% set refresh = item.refresh | default(bind_zone_default_refresh)  %}
+{% set retry = item.retry | default(bind_zone_default_retry)  %}
+{% set expire = item.expire | default(bind_zone_default_expire)  %}
+{% set ttl = item.ttl | default(bind_zone_default_ttl)  %}
+
+$TTL {{ ttl }}
+$ORIGIN {{ item.origin }}.
+@               IN              SOA             ns1.webreactor.eu. admin.{{item.origin}}. (
+{{ zone_serial }}     ; Serial
+{{ refresh }}             ; Refresh
+{{ retry }}            ; Retry
+{{ expire }}             ; Expire
+{{ ttl }}             ; Minimum TTL
+)
+{% for ns in nameservers %}
+                IN              NS              {{ ns.domain }}.
+{% endfor %}
+{% if item.include_gapps is defined %}
+                IN              MX      10      aspmx.l.google.com.
+                IN              MX      20      alt1.aspmx.l.google.com.
+                IN              MX      20      alt2.aspmx.l.google.com.
+                IN              MX      30      aspmx2.l.google.com.
+                IN              MX      30      aspmx3.l.google.com.
+                IN              MX      30      aspmx4.l.google.com.
+                IN              MX      30      aspmx5.l.google.com.
+{% endif %}
+{{ item.origin }}.       IN              A               {{ in_a }}
+www              IN              A               {{ in_a }}
+localhost        IN              A               127.0.0.1
+{% if item.include_gapps is defined %}
+mail            IN              CNAME               ghs.google.com.
+{% else %}
+mail            IN              A               {{ in_a }}
+{% endif %}
+{% for ns in nameservers %}
+{{ ns.domain.split('.')[0] }}    IN              A              {{ ns.in_a }}
+{% endfor %}
+{% if item.custom_lines is defined %}
+{% for line in item.custom_lines %}
+{{ line.line }}     {{ line.dest| default(in_a) }}
+{% endfor %}
+{% endif %}

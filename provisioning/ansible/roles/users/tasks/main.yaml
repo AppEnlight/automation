@@ -1,0 +1,7 @@
+- name: create users
+  user: name={{ item.user }} generate_ssh_key=yes ssh_key_bits=4096 ssh_key_type=rsa
+  with_items: "{{accounts}}"
+
+- name: set home permissions
+  file: path=/home/{{ item.user }} mode=0750
+  with_items: "{{accounts}}"

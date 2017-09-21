@@ -1,0 +1,33 @@
+- name: add postgresql repo
+  apt_repository: repo="deb http://apt.postgresql.org/pub/repos/apt/ {{ansible_distribution_release}}-pgdg main" state=present update_cache=true
+
+- name: install latest postgresql
+  apt: pkg={{item}} state=present force=yes
+  with_items:
+      - postgresql-{{postgresql_version}}
+      - postgresql-contrib-{{postgresql_version}}
+      - python-psycopg2
+  register: error_handler
+  until: error_handler|success
+  retries: 99
+  delay: 15
+
+- command: apt-get clean
+
+- name: create postgres users
+  become_user: postgres
+  postgresql_user: name={{item.name}} password={{item.password}} login_user=postgres
+  with_items: "{{postgresql_users}}"
+- name: create db
+  become_user: postgres
+  postgresql_db: name={{item.name}} owner={{item.owner}} login_user=postgres
+  with_items: "{{postgresql_databases}}"
+
+- name: create postgresql custom config dir
+  file: path={{postgresql_config_location}}/conf.d state=directory
+
+- name: copy config template
+  template: src=postgresql.jinja2 dest={{postgresql_config_location}}/conf.d/customized.conf
+
+- name: enable postgresql custom config dir
+  replace: dest={{postgresql_config_location}}/postgresql.conf regexp="^#include_dir =.*"  replace="include_dir = 'conf.d'"

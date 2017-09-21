@@ -1,0 +1,19 @@
+---
+- hosts: "{{hosts}}"
+  become: true
+  vars:
+    ansible_ssh_pipelining: true
+  tasks:
+    - name: stop supervisor
+      become_user: root
+      command: /etc/init.d/supervisor stop
+      when: ansible_distribution_version|float < 16
+      ignore_errors: yes
+
+    - name: stop supervisor
+      command: service supervisor stop
+      when: ansible_distribution_version|float >= 16
+      ignore_errors: yes
+
+    - shell: cat /dev/zero > zero.fill; sync;sleep 1;sync;rm -f zero.fill
+      ignore_errors: yes

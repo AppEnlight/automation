@@ -1,0 +1,30 @@
+iptables_allow_established_conns: true
+iptables_allow_ping: true
+custom_ssh_port: 22
+iptables_rules:
+  - comment: allow containers - TCP FTP/TLS, DNS, ntp, postfix, http/s
+    rule: -A INPUT -s 192.168.0.0/8 -i lxcbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+  - comment: allow virtual machines TCP - FTP/TLS, DNS, ntp, postfix, http/s
+    rule: -A INPUT -s 10.0.0.0/8 -i virbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+  - comment: allow virtual machines TCP 2 - FTP/TLS, DNS, ntp, postfix, http/s
+    rule: -A INPUT -s 192.168.0.0/8 -i virbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+  - comment: allow containers UDP - ntp
+    rule: -A INPUT -s 192.168.0.0/8 -i lxcbr0 -p udp -m multiport --dports 53 -j ACCEPT
+  - comment: allow virtual machines UDP - ntp
+    rule: -A INPUT -s 10.0.0.0/8 -i virbr0 -p udp -m multiport --dports 53 -j ACCEPT
+  - comment: allow SSH, rate limit
+    rule: -A INPUT -m hashlimit -m tcp -p tcp --dport "{{custom_ssh_port}}" -m conntrack --ctstate NEW --hashlimit-upto 10/m --hashlimit-burst 10 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_ssh -j ACCEPT
+  - comment: allow DNS TCP
+    rule: -A INPUT -p tcp --dport 53 -j ACCEPT
+  - comment: allow DNS UDP
+    rule: -A INPUT -p udp --dport 53 -j ACCEPT
+  - comment: allow HTTP, rate limit
+    rule: -A INPUT -m hashlimit -m tcp -p tcp --dport 80 -m conntrack --ctstate NEW --hashlimit-upto 200/s --hashlimit-burst 200 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_80 -j ACCEPT
+  - comment: allow HTTPS, rate limit
+    rule: -A INPUT -m hashlimit -m tcp -p tcp --dport 443 -m conntrack --ctstate NEW --hashlimit-upto 200/s --hashlimit-burst 200 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_443 -j ACCEPT
+  - comment: allow FTP/TLS, rate limit
+    rule: -A INPUT -m hashlimit -p tcp -m multiport --dports 20,21,989,990 -m conntrack --ctstate NEW --hashlimit-upto 5/s --hashlimit-burst 5 --hashlimit-htable-expire 60000 --hashlimit-mode srcip,srcport --hashlimit-name port_ftp -j ACCEPT
+  - comment: allow rsync
+    rule: -A INPUT -p tcp --dport 873 -j ACCEPT
+  - comment: allow ntp
+    rule: -A INPUT -p udp --sport 123 -j ACCEPT

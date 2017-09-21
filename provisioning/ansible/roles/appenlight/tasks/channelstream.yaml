@@ -1,0 +1,59 @@
+- name: install basic packages
+  apt: pkg={{ item }} state=present update_cache=true
+  with_items:
+    - build-essential
+    - libffi-dev
+    - libev-dev
+    - libevent-dev
+    - python3-dev
+    - supervisor
+  register: error_handler
+  until: error_handler|success
+  retries: 99
+  delay: 15
+
+- command: apt-get clean
+
+- name: create user appenlight_websockets
+  user: name=appenlight_websockets generate_ssh_key=yes ssh_key_bits=2048
+
+- name: check if archive exists
+  become_user: appenlight_websockets
+  stat: path=/home/appenlight_websockets/virtualenv.tar.gz  get_checksum=true
+  register: sym
+
+- name: download venv
+  become_user: appenlight_websockets
+  get_url: url=https://pypi.python.org/packages/c8/82/7c1eb879dea5725fae239070b48187de74a8eb06b63d9087cd0a60436353/virtualenv-15.0.1.tar.gz dest=/home/appenlight_websockets/virtualenv.tar.gz mode=0440
+  when: not sym.stat.exists or sym.stat.md5 != '28d76a0d9cbd5dc42046dd14e76a6ecc'
+
+- name: check if archive exists
+  become_user: appenlight_websockets
+  stat: path=/home/appenlight_websockets/virtualenv.tar.gz  get_checksum=true
+  register: sym
+
+- name: checking checksum
+  fail: msg="Checksum is not correct"
+  when: sym.stat.md5 != '28d76a0d9cbd5dc42046dd14e76a6ecc'
+
+- name: unpack virtualenv
+  become_user: appenlight_websockets
+  unarchive: src=/home/appenlight_websockets/virtualenv.tar.gz dest=/home/appenlight_websockets copy=no
+
+- name: create py3 virtualenv
+  become_user: appenlight_websockets
+  command: python3 /home/appenlight_websockets/virtualenv-15.0.1/virtualenv.py /home/appenlight_websockets/python3
+
+- name: install pip packages for appenlight_websockets
+  become_user: appenlight_websockets
+  pip: name={{item.name}} version={{item.version}} virtualenv=/home/appenlight_websockets/python3 chdir=yes
+  with_items:
+      - name: channelstream
+        version: 0.5.2
+
+- name: add channelstream config for appenlight_websockets
+  become_user: appenlight_websockets
+  copy: src=channelstream.ini dest=/home/appenlight_websockets/channelstream.ini owner=appenlight_websockets group=appenlight_websockets mode=0644
+
+- name: add supervisord configs
+  copy: src=supervisord/appenlight_channelstream.conf dest=/etc/supervisor/conf.d/appenlight_channelstream.conf owner=root group=root mode=0600

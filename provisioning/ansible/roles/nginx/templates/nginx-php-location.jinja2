@@ -1,0 +1,14 @@
+location / {
+    root /home/{{ item.user }}/public/{{ item.name }}/htdocs;
+    index index.php index.html index.htm;
+    try_files $uri $uri/ /index.php?$args;
+}
+location ~ \.php$ {
+    root /home/{{ item.user }}/public/{{ item.name }}/htdocs;
+    try_files $uri =404;
+    include fastcgi_params;
+    fastcgi_pass unix:{{ php_pool_dir }}/{{ item.name }}.php.sock;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_read_timeout 180;
+}

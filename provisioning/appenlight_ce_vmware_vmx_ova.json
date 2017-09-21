@@ -1,0 +1,50 @@
+{
+  "variables": {
+    "ssh_name": "rcdev",
+    "ssh_pass": "qweqweqwe",
+    "hostname": "rhodecode-appenlight",
+    "source_path": "./ubuntu_xenial/ubuntu_xenial.vmx"
+  },
+  "builders": [
+    {
+      "type": "vmware-vmx",
+      "source_path": "{{user `source_path`}}",
+      "ssh_username": "{{user `ssh_name`}}",
+      "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_wait_timeout": "30m",
+      "shutdown_command": "echo '{{user `ssh_pass`}}'|sudo -S shutdown -P now",
+      "shutdown_timeout": "15m",
+      "output_directory": "rhodecode_appenlight_ce",
+      "vm_name": "rhodecode_appenlight_ce",
+      "vmx_data": {
+        "memsize": 1024,
+        "displayName": "AppEnlight-CE"
+      },
+      "vmx_data_post": {
+        "memsize": 4096
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "user": "{{user `ssh_name`}}",
+      "host_alias": "{{user `hostname`}}",
+      "playbook_file": "../ansible/provision_appenlight_vm.yaml",
+      "extra_arguments": [
+        "--extra-vars",
+        "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"
+      ]
+    },
+    {
+      "type": "ansible",
+      "user": "{{user `ssh_name`}}",
+      "host_alias": "{{user `hostname`}}",
+      "playbook_file": "../ansible/zero_provision_machine.yaml",
+      "extra_arguments": [
+        "--extra-vars",
+        "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"
+      ]
+    }
+  ]
+}

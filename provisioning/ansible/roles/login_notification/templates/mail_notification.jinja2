@@ -1,0 +1,13 @@
+#!/bin/bash
+sender="{{ security_mailer }}"
+recipient="{{ security_recipient }}"
+host="host1.webreactor.eu"
+
+time=$(date)
+if [ "$PAM_TYPE" != "close_session" ]; then
+
+subject="SSH Login: $PAM_USER from $PAM_RHOST on $host at $time"
+
+message="SSH login $PAM_USER from $PAM_RHOST at $time on $host"
+echo "$message" | mail -r "$sender" -s "$subject" "$recipient"
+fi

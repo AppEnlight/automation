@@ -1,0 +1,37 @@
+*filter
+# enable loopback
+-A INPUT -i lo -j ACCEPT
+# allow all existing connections
+{% if iptables_allow_established_conns %}
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+{% endif %}
+# Drop non-conforming packets, such as malformed headers, etc.
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+# Block remote packets claiming to be from a loopback address.
+-A INPUT -s 127.0.0.0/8 ! -i lo -j DROP
+
+# HOST SPECIFIC START
+{% for item in iptables_rules %}
+# {{ item.comment }}
+{{ item.rule }}
+{% endfor %}
+# HOST SPECIFIC END
+
+# Allow ping
+{% if iptables_allow_ping %}
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+{% endif %}
+# drop recon packets
+-A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+# drop synflood attack
+-A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+# drop XMAS packets
+-A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+# logging
+-N LOGGING
+-A INPUT -j LOGGING
+-A LOGGING -m limit --limit 2/min -j LOG --log-prefix "IPTables-Dropped: "
+# drop everything else
+-A LOGGING -j DROP
+-A INPUT -j DROP
+COMMIT

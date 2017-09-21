@@ -1,0 +1,8 @@
+nginx_default_listen: 80
+nginx_user: nginx
+nginx_dist: mainline
+accounts: []
+nginx_ssl_certs: []
+nginx_self_signed_domains: []
+nginx_vhosts: []
+php_pool_dir: /var/run/php5.3

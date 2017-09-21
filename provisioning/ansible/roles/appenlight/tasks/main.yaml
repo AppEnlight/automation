@@ -1,0 +1,3 @@
+- include: elasticsearch.yaml
+- include: channelstream.yaml
+- include: appenlight.yaml

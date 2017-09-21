@@ -1,0 +1,31 @@
+- name: copy appenlight_charting_ee code
+  become_user: appenlight
+  unarchive: src={{source_code_location_appenlight_charting_ee}} dest=/home/appenlight/repos
+
+- file: path=/home/appenlight/repos/appenlight_charting_ee owner=appenlight group=appenlight recurse=yes
+
+- name: install pip packages for appenlight_charting_ee
+  become_user: appenlight
+  pip: requirements=/home/appenlight/repos/appenlight_charting_ee/backend/requirements.txt virtualenv=/home/appenlight/python3 chdir=yes
+
+- name: install appenlight_charting_ee
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/python setup.py develop chdir=/home/appenlight/repos/appenlight_charting_ee/backend
+
+- name: clear out py files
+  command: find . -type f \( ! -name "setup.py" ! -path "*/migrations/*" ! -path "*/ae_charting_ee/__init__.py"  \) \( -name "*.py" -o -name "*.pyc" -o -name "*.c" -o -name "*.dll" \) -delete chdir=/home/appenlight/repos/appenlight_charting_ee/backend
+
+- name: clear out build dir
+  file: path=/home/appenlight/repos/appenlight_charting_ee/backend/build state=absent
+
+- name: migrate AE db
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-migratedb -c production.ini chdir=/home/appenlight/appenlight/
+
+- name: initialize AE elasticsearch
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-reindex-elasticsearch -c production.ini chdir=/home/appenlight/appenlight/ -t template
+
+- name: create webassets for AE
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-static -c production.ini chdir=/home/appenlight/appenlight/

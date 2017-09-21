@@ -1,0 +1,7 @@
+sudo rabbitmqctl add_user rcdev {{rabbitmq_password}}
+sudo rabbitmqctl add_vhost rcdevhost
+sudo rabbitmqctl set_permissions -p rcdevhost rcdev ".*" ".*" ".*"
+
+-- change password --
+rabbitmqctl change_password rcdev newpass
+

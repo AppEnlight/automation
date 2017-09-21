@@ -1,0 +1,129 @@
+---
+- hosts: "{{hosts}}"
+  become: true
+  vars:
+    hostname: rhodecode-appenlight
+    ansible_ssh_pipelining: true
+    source_code_location_appenlight_ce: ../../appenlight_ce/appenlight_ce.tar.gz
+    source_code_location_appenlight_uptime_ce: ../../appenlight_ce/appenlight_uptime_ce.tar.gz
+    elasticsearch_ram: 1024m
+    nginx_default_listen: 80
+    nginx_user: www-data
+    appenlight_domain: rhodecode-appenlight
+    postfix_fqdn: "{{appenlight_domain}}"
+    custom_ssh_port: 9022
+    appenlight_admin_password: admin #so we can gen password when invoking VM
+    appenlight_pg_password: test #so we can gen password when invoking VM
+    accounts:
+      - user: appenlight
+    postgresql_users:
+        - name: appenlight
+          password: "{{appenlight_pg_password}}"
+    postgresql_databases:
+        - name: appenlight
+          owner: appenlight
+    nginx_self_signed_domains:
+        - "{{appenlight_domain}}"
+    nginx_vhosts:
+        - name: appenlight_ssl
+          vhost_custom_lines:
+              - limit_req_zone  $binary_remote_addr  zone=front:1m   rate=10r/s
+              - limit_req_zone  $binary_remote_addr  zone=api:1m     rate=10r/s
+          upstream_backends:
+              - name: backend_appenlight
+                lines:
+                    - server unix:/tmp/appenlight.sock
+              - name: backend_appenlight_api
+                lines:
+                    - server unix:/tmp/appenlight.sock
+              - name: backend_appenlight_cometd
+                lines:
+                    - server 127.0.0.1:8088 weight=1 max_fails=5 fail_timeout=30s
+          server_names:
+            - "{{appenlight_domain}}"
+          ssl_certificate: /etc/nginx/keys/{{appenlight_domain}}.crt
+          ssl_certificate_key: /etc/nginx/keys/{{appenlight_domain}}.key
+          listen: 443 ssl
+          server_custom_lines:
+              - add_header x-frame-options "SAMEORIGIN"
+              - add_header X-XSS-Protection "1; mode=block"
+              - add_header X-Content-Type-Options "nosniff"
+              - add_header strict-transport-security "max-age=31536000; includeSubdomains"
+              - proxy_set_header Host $http_host
+              - proxy_set_header X-Real-IP $remote_addr
+              - proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for
+              - proxy_set_header X-Forwarded-Proto $scheme
+              - proxy_set_header X-Url-Scheme $scheme
+          locations:
+            - name: /static
+              custom_lines:
+                  - alias /home/appenlight/appenlight/webassets
+            - name: /channelstream
+              custom_lines:
+                  - rewrite /channelstream/(.*) /$1 break
+                  - proxy_connect_timeout   10
+                  - proxy_send_timeout      10m
+                  - proxy_read_timeout      10m
+                  - tcp_nodelay             off
+                  - proxy_pass              http://backend_appenlight_cometd
+                  - gzip off
+                  - proxy_http_version 1.1
+                  - proxy_set_header Upgrade $http_upgrade
+                  - proxy_set_header Connection "upgrade"
+            - name: /
+              custom_lines:
+                  - client_max_body_size    10m
+                  - client_body_buffer_size 512k
+                  - proxy_connect_timeout   10
+                  - proxy_send_timeout      60
+                  - proxy_read_timeout      60
+                  - keepalive_timeout 1
+                  - limit_req   zone=front  burst=10  nodelay
+                  - error_page 502 503 504 /maintenance.html
+                  - gzip on
+                  - proxy_pass http://backend_appenlight
+
+        - name: appenlight_non_ssl
+          server_names:
+            - "{{appenlight_domain}}"
+          listen: 80
+          server_custom_lines:
+              - rewrite ^(.*) https://{{appenlight_domain}}$1 permanent
+    iptables_rules:
+        - comment: allow containers - TCP FTP/TLS, DNS, ntp, postfix, http/s
+          rule: -A INPUT -s 192.168.0.0/8 -i lxcbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+        - comment: allow virtual machines TCP - FTP/TLS, DNS, ntp, postfix, http/s
+          rule: -A INPUT -s 10.0.0.0/8 -i virbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+        - comment: allow virtual machines TCP 2 - FTP/TLS, DNS, ntp, postfix, http/s
+          rule: -A INPUT -s 192.168.0.0/8 -i virbr0 -p tcp -m multiport --dports 20,21,25,80,123,443,989,990 -j ACCEPT
+        - comment: allow containers UDP - ntp
+          rule: -A INPUT -s 192.168.0.0/8 -i lxcbr0 -p udp -m multiport --dports 53 -j ACCEPT
+        - comment: allow virtual machines UDP - ntp
+          rule: -A INPUT -s 10.0.0.0/8 -i virbr0 -p udp -m multiport --dports 53 -j ACCEPT
+        - comment: allow SSH, rate limit
+          rule: -A INPUT -m hashlimit -m tcp -p tcp --dport {{custom_ssh_port}} -m conntrack --ctstate NEW --hashlimit-upto 10/m --hashlimit-burst 10 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_ssh -j ACCEPT
+        - comment: allow DNS TCP
+          rule: -A INPUT -p tcp --dport 53 -j ACCEPT
+        - comment: allow DNS UDP
+          rule: -A INPUT -p udp --dport 53 -j ACCEPT
+        - comment: allow Websockets TCP
+          rule: -A INPUT -p tcp --dport 8088 -j ACCEPT
+        - comment: allow HTTP, rate limit
+          rule: -A INPUT -m hashlimit -m tcp -p tcp --dport 80 -m conntrack --ctstate NEW --hashlimit-upto 200/s --hashlimit-burst 200 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_80 -j ACCEPT
+        - comment: allow HTTPS, rate limit
+          rule: -A INPUT -m hashlimit -m tcp -p tcp --dport 443 -m conntrack --ctstate NEW --hashlimit-upto 200/s --hashlimit-burst 200 --hashlimit-htable-expire 60000 --hashlimit-mode srcip --hashlimit-name port_443 -j ACCEPT
+        - comment: allow FTP/TLS, rate limit
+          rule: -A INPUT -m hashlimit -p tcp -m multiport --dports 20,21,989,990 -m conntrack --ctstate NEW --hashlimit-upto 5/s --hashlimit-burst 5 --hashlimit-htable-expire 60000 --hashlimit-mode srcip,srcport --hashlimit-name port_ftp -j ACCEPT
+        - comment: allow rsync
+          rule: -A INPUT -p tcp --dport 873 -j ACCEPT
+        - comment: allow ntp
+          rule: -A INPUT -p udp --sport 123 -j ACCEPT
+  roles:
+    - hostname
+    - basic
+    - iptables
+    - postfix
+    - postgresql
+    - nginx
+    - letsencrypt
+    - appenlight

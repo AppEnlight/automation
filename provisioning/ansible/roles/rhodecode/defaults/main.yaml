@@ -1,0 +1,6 @@
+vcsserver_host: 127.0.0.1
+vcsserver_port: 10001
+rhodecode_repodir: /home/rcdev/repos
+rhodecode_host: 127.0.0.1
+rhodecode_port: 10002
+rhodecode_port2: 10003

@@ -1,0 +1,95 @@
+{
+  "variables": {
+    "ssh_name": "ubuntu",
+    "ssh_pass": "ubuntu",
+    "hostname": "rhodecode-appenlight"
+  },
+  "builders": [
+    {
+      "type": "qemu",
+      "qemuargs": [
+        [ "-m", "1024M" ]
+      ],
+      "iso_url": "http://releases.ubuntu.com/16.04/ubuntu-16.04-server-amd64.iso",
+      "iso_checksum": "b8b172cbdf04f5ff8adc8c2c1b4007ccf66f00fc6a324a6da6eba67de71746f6",
+      "iso_checksum_type": "sha256",
+      "output_directory": "rhodecode_appenlight_ce",
+      "shutdown_command": "echo '{{user `ssh_pass`}}'|sudo -S shutdown -P now",
+      "disk_size": 204800,
+      "format": "qcow2",
+      "headless": false,
+      "accelerator": "kvm",
+      "http_directory": "hosted",
+      "http_port_min": 10082,
+      "http_port_max": 10089,
+      "ssh_host_port_min": 2222,
+      "ssh_host_port_max": 2229,
+      "ssh_username": "{{user `ssh_name`}}",
+      "ssh_password": "{{user `ssh_pass`}}",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "30m",
+      "vm_name": "rhodecode_appenlight_ce",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "/install/vmlinuz noapic ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/appenlight_preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{user `hostname`}} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "initrd=/install/initrd.gz -- net.ifnames=0 console=ttyS0,115200n8 <enter><enter><enter>"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./hosted/ttyS0.conf",
+      "destination": "/tmp/ttyS0.conf"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 15",
+        "echo '{{user `ssh_pass`}}'|sudo -S echo 'uname -a'",
+        "echo '{{user `ssh_pass`}}'|sudo -S mv '/tmp/ttyS0.conf' '/etc/init/ttyS0.conf'",
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get clean",
+        "echo '{{user `ssh_pass`}}'|sudo -S rm -rf '/var/lib/apt/lists/*'",
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get clean",
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get update",
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y upgrade ",
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y install python2.7 python acl ansible python-pexpect"
+      ]
+    },
+    {
+      "type": "ansible",
+      "user": "{{user `ssh_name`}}",
+      "host_alias": "{{user `hostname`}}",
+      "playbook_file": "../ansible/provision_appenlight_vm.yaml",
+      "extra_arguments": [
+        "--extra-vars",
+        "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"
+      ]
+    },
+    {
+      "type": "ansible",
+      "user": "{{user `ssh_name`}}",
+      "host_alias": "{{user `hostname`}}",
+      "playbook_file": "../ansible/zero_provision_machine.yaml",
+      "extra_arguments": [
+        "--extra-vars",
+        "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"
+      ]
+    }
+  ]
+}

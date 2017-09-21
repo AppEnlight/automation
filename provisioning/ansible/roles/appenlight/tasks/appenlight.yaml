@@ -1,0 +1,179 @@
+- command: python3 -c "import uuid; print(str(uuid.uuid4()).replace('-',''))"
+  register: tmp_appenlight_admin_auth_token
+
+- set_fact: appenlight_admin_auth_token="{{ tmp_appenlight_admin_auth_token.stdout }}"
+
+- name: install basic packages
+  apt: pkg={{ item }} state=present update_cache=true
+  with_items:
+    - build-essential
+    - git
+    - libffi-dev
+    - libssl-dev
+    - libxslt1-dev
+    - libpq-dev
+    - libev-dev
+    - libevent-dev
+    - libpng12-dev
+    - libpq-dev
+    - mercurial
+    - python3-dev
+    - python-psycopg2
+    - redis-server
+    - supervisor
+
+- command: apt-get clean
+
+- name: enable supervisor
+  service: name=supervisor enabled=yes
+
+- name: place readmes
+  copy: src=appenlight_readme.txt dest=/home/rcdev mode=0644
+
+- name: update supervisor init script with bigger limits
+  copy: src=init.d/supervisor dest=/etc/init.d/supervisor mode=0644
+
+- name: create override dir for supervisor systemd service
+  file: path=/etc/systemd/system/supervisor.service.d state=directory mode=0755
+  when: ansible_distribution_version|float >= 16
+
+- name: update supervisor systemd service with bigger limits
+  copy: src=etc/systemd/system/supervisor.service.d/override.conf dest=/etc/systemd/system/supervisor.service.d/override.conf mode=0755
+  when: ansible_distribution_version|float >= 16
+
+- name: update supervisor daemon
+  command: systemctl daemon-reload
+  when: ansible_distribution_version|float >= 16
+
+- name: enable supervisord directly
+  command: systemctl enable supervisor
+  when: ansible_distribution_version|float >= 16
+
+- name: update appenlight limits
+  copy: src=security/limits.d/appenlight.conf dest=/etc/security/limits.d/appenlight.conf
+
+- name: update appenlight_websockets limits
+  copy: src=security/limits.d/appenlight_websockets.conf dest=/etc/security/limits.d/appenlight_websockets.conf
+
+- name: update appenlight_elasticsearch limits
+  copy: src=security/limits.d/appenlight_elasticsearch.conf dest=/etc/security/limits.d/appenlight_elasticsearch.conf
+
+- name: create user appenlight
+  user: name=appenlight generate_ssh_key=yes ssh_key_bits=2048
+
+- name: add supervisord config appenlight.conf
+  copy: src=supervisord/appenlight.conf dest=/etc/supervisor/conf.d/ owner=root group=root mode=0600
+
+- name: add supervisord config appenlight_api.conf
+  copy: src=supervisord/appenlight_api.conf dest=/etc/supervisor/conf.d/ owner=root group=root mode=0600
+
+- name: add supervisord config appenlight_beat.conf
+  copy: src=supervisord/appenlight_beat.conf dest=/etc/supervisor/conf.d/ owner=root group=root mode=0600
+
+- name: add supervisord config appenlight_celery.conf
+  copy: src=supervisord/appenlight_celery.conf dest=/etc/supervisor/conf.d/ owner=root group=root mode=0600
+
+- name: add supervisord config appenlight_uptime_monitor.conf
+  copy: src=supervisord/appenlight_uptime_monitor.conf dest=/etc/supervisor/conf.d/ owner=root group=root mode=0600
+
+- name: check if archive exists
+  become_user: appenlight
+  stat: path=/home/appenlight/virtualenv.tar.gz  get_checksum=true
+  register: sym
+
+- name: download venv
+  become_user: appenlight
+  get_url: url=https://pypi.python.org/packages/c8/82/7c1eb879dea5725fae239070b48187de74a8eb06b63d9087cd0a60436353/virtualenv-15.0.1.tar.gz dest=/home/appenlight/virtualenv.tar.gz mode=0440
+  when: not sym.stat.exists or sym.stat.md5 != '28d76a0d9cbd5dc42046dd14e76a6ecc'
+
+- name: check if archive exists
+  become_user: appenlight
+  stat: path=/home/appenlight/virtualenv.tar.gz  get_checksum=true
+  register: sym
+
+- name: checking checksum
+  fail: msg="Checksum is not correct"
+  when: sym.stat.md5 != '28d76a0d9cbd5dc42046dd14e76a6ecc'
+
+- name: unpack virtualenv
+  become_user: appenlight
+  unarchive: src=/home/appenlight/virtualenv.tar.gz dest=/home/appenlight copy=no
+
+- name: create py3 virtualenv
+  become_user: appenlight
+  command: python3 /home/appenlight/virtualenv-15.0.1/virtualenv.py /home/appenlight/python3
+
+- name: create config dir
+  file: path=/home/appenlight/appenlight recurse=yes state=directory owner=appenlight group=appenlight mode=0775
+
+- name: create code repos dir
+  file: path=/home/appenlight/repos recurse=yes state=directory owner=appenlight group=appenlight mode=0770
+
+- name: copy appenlight_ce code
+  become_user: appenlight
+  unarchive: src={{source_code_location_appenlight_ce}} dest=/home/appenlight/repos
+
+- file: path=/home/appenlight/repos/appenlight_ce owner=appenlight group=appenlight recurse=yes
+
+- name: copy appenlight_uptime_ce code
+  become_user: appenlight
+  unarchive: src={{source_code_location_appenlight_uptime_ce}} dest=/home/appenlight/repos
+
+- file: path=/home/appenlight/repos/appenlight_uptime_ce owner=appenlight group=appenlight recurse=yes
+
+- name: install pip packages for appenlight_ce
+  become_user: appenlight
+  pip: requirements=/home/appenlight/repos/appenlight_ce/backend/requirements.txt virtualenv=/home/appenlight/python3 chdir=yes
+
+- name: install pip packages for appenlight_uptime_ce
+  become_user: appenlight
+  pip: requirements=/home/appenlight/repos/appenlight_uptime_ce/backend/requirements.txt virtualenv=/home/appenlight/python3 chdir=yes
+
+- name: install appenlight_ce
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/python setup.py develop chdir=/home/appenlight/repos/appenlight_ce/backend
+
+- name: install appenlight_uptime_ce
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/python setup.py develop chdir=/home/appenlight/repos/appenlight_uptime_ce/backend
+
+- name: create AE config
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-make-config production.ini --domain={{appenlight_domain}} --dbstring=postgresql://appenlight:{{appenlight_pg_password}}@127.0.0.1:5432/appenlight chdir=/home/appenlight/appenlight/ creates=/home/appenlight/appenlight/production.ini
+
+- name: initialize AE db
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-migratedb -c production.ini chdir=/home/appenlight/appenlight/
+
+- name: populate AE db
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-initializedb -c production.ini --username admin --password {{ appenlight_admin_password }} --email admin@{{appenlight_domain}} --auth-token={{appenlight_admin_auth_token}} chdir=/home/appenlight/appenlight/
+
+- name: create AE uptime config
+  become_user: appenlight
+  template: src=uptime_config.ini.jinja2 dest=/home/appenlight/appenlight/uptime_config.ini owner=appenlight group=appenlight mode=0600
+
+- name: create webassets for AE
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-static -c production.ini chdir=/home/appenlight/appenlight/
+
+- name: add supervisord elasticsearch TMP config
+  template: src=supervisord/appenlight_elasticsearch_tmp.jinja2 dest=/etc/supervisor/conf.d/appenlight_elasticsearch.conf owner=root group=root mode=0600
+
+- name: restart supervisor
+  command: service supervisor restart
+  when: ansible_distribution_version|float >= 16
+
+- name: restart supervisor
+  become_user: root
+  command: /etc/init.d/supervisor restart
+  when: ansible_distribution_version|float < 16
+
+- pause: seconds=45
+
+- name: initialize AE elasticsearch
+  become_user: appenlight
+  command: /home/appenlight/python3/bin/appenlight-reindex-elasticsearch -c production.ini chdir=/home/appenlight/appenlight/
+
+- name: add supervisord elasticsearch config
+  template: src=supervisord/appenlight_elasticsearch.jinja2 dest=/etc/supervisor/conf.d/appenlight_elasticsearch.conf owner=root group=root mode=0600

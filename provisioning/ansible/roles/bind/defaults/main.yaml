@@ -1,0 +1,7 @@
+bind_zones: []
+bind_default_nameservers: []
+bind_default_in_a:
+bind_zone_default_refresh: 1H
+bind_zone_default_retry: 15M
+bind_zone_default_expire: 4W
+bind_zone_default_ttl: 1H

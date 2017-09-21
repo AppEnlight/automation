@@ -1,0 +1,9 @@
+server {
+       listen          80;
+       server_name     gist.{{rhodecode_domain}};
+       access_log      /var/log/nginx/rhodecode-gist.access.log;
+       error_log       /var/log/nginx/rhodecode-gist.error.log;
+
+       rewrite ^/(.+)$ http://{{rhodecode_domain}}/_admin/gists/$1;
+       rewrite (.*) http://{{rhodecode_domain}}/_admin/gists;
+ }

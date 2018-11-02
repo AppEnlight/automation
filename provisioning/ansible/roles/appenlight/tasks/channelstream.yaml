@@ -49,7 +49,7 @@
   pip: name={{item.name}} version={{item.version}} virtualenv=/home/appenlight_websockets/python3 chdir=yes
   with_items:
       - name: channelstream
-        version: 0.5.2
+        version: 0.6.9
 
 - name: add channelstream config for appenlight_websockets
   become_user: appenlight_websockets

@@ -1,0 +1,7 @@
+nginx_default_listen: 80
+nginx_user: nginx
+nginx_dist: mainline
+nginx_default_page_enabled: true
+nginx_default_page: nginx/default
+nginx_processes: "{{ ansible_processor_vcpus * 2 }}"
+nginx_connections: 2048

@@ -1,0 +1,12 @@
+- name: install basic packages
+  apt: pkg={{ item }} state=present update_cache=true
+  with_items:
+    - redis-server
+  tags: ['redis']
+
+- name: Make sure a service is running
+  service:
+    state: started
+    name: redis
+    enabled: yes
+  tags: ['redis']

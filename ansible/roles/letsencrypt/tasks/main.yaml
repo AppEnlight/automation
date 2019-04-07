@@ -1,0 +1,31 @@
+- name: installing iptables
+  block:
+    - name: get certbot
+      get_url:
+        url: https://dl.eff.org/certbot-auto
+        dest: /root/certbot-auto
+
+    - name: chmod certbot
+      file:
+        path: /root/certbot-auto
+        mode: 0550
+
+    - name: run certbot install
+      command: ./certbot-auto -n
+      args:
+        chdir: /root creates=/root/certbot.installed
+      register: command_result
+      ignore_errors: yes
+
+    - name: certbot register
+      command: ./certbot-auto register -n -m {{lets_encrypt_email}} --agree-tos
+      args:
+        chdir: /root
+        creates: /root/certbot.registered
+      ignore_errors: yes
+
+    - name: generate certs
+      command: ./certbot-auto certonly -n --webroot --webroot-path=/usr/share/nginx/letsencrypt/ -d "{{item}}" chdir=/root
+      with_items: "{{letsencrypt_domains}}"
+      ignore_errors: yes
+  tags: ['letsencrypt']

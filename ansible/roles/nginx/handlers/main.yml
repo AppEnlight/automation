@@ -1,0 +1,10 @@
+---
+- name: test nginx config
+  shell: nginx -t
+  listen: restart webserver
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  listen: restart webserver

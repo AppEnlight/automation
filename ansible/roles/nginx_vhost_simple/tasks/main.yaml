@@ -1,0 +1,11 @@
+- name: create vhost
+  block:
+  - name: add vhosts
+    template:
+      src: "{{ item }}"
+      dest: "/etc/nginx/conf.d/"
+    with_items: "{{lookup('fileglob', '{{nginx_vhost_simple_vhost_dir}}')}}"
+    notify: restart webserver
+  - meta: flush_handlers
+  tags: ['nginx_vhost_simple']
+

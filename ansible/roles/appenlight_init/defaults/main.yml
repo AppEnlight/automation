@@ -1,0 +1,7 @@
+---
+appenlight_user: appenlight
+appenlight_group: appenlight
+appenlight_repos: /home/appenlight/repos
+appenlight_rundir: /home/appenlight/appenlight
+appenlight_virtualenv_dir: /home/appenlight/env
+appenlight_virtualenv_python: python3

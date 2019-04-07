@@ -1,0 +1,33 @@
+- name: install basic packages
+  apt: pkg={{ item }} state=present update_cache=true
+  with_items:
+    - build-essential
+    - git
+#    - libffi-dev
+#    - libssl-dev
+#    - libxslt1-dev
+#    - libev-dev
+#    - libevent-dev
+    - python3-dev
+    - python3-venv
+
+- block:
+    - file:
+        path: "{{channelstream_rundir}}"
+        state: directory
+        mode: 0755
+    - name: add channelstream config
+      template:
+        src: config.ini.jinja2
+        dest: "{{channelstream_rundir}}/config.ini"
+        owner: channelstream
+        group: channelstream
+
+    - name: create python venv
+      command: "{{channelstream_virtualenv_python}} -m venv {{channelstream_virtualenv_dir}}"
+
+    - name: install channelstream
+      pip:
+        name: channelstream==0.6.14
+        virtualenv: "{{channelstream_virtualenv_dir}}"
+  become_user: channelstream

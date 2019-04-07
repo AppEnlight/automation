@@ -1,0 +1,2 @@
+nginx_certificates_self_signed: []
+nginx_certificates_dir: "*"

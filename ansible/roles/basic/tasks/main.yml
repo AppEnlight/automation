@@ -1,0 +1,55 @@
+- name: installing basics
+  block:
+    - name: install basics
+      apt: pkg={{ item }} state=present
+      with_items:
+      - sshpass
+      - build-essential
+      - vim
+      - mc
+      - curl
+      - acl
+      - update-motd
+      - update-notifier-common
+      - landscape-common
+      - mercurial
+      - git
+      register: error_handler
+      until: error_handler is success
+      retries: 99
+      delay: 15
+
+    - command: apt-get clean
+
+    - name: add pam limits to common session
+      lineinfile: dest=/etc/pam.d/common-session state=present line="session required pam_limits.so" insertafter=EOF
+
+    - name: customize sysctl
+      template:
+        src: sysctl.jinja2
+        dest: /etc/sysctl.d/61-app-customized.conf
+
+    - name: update limits
+      copy: src=security/limits.d/root.conf dest=/etc/security/limits.d/root.conf
+
+    - name: update sysctl
+      command: sysctl -p
+
+    - name: disable root ssh login
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: "^#PermitRootLogin .*"
+        replace: "PermitRootLogin no"
+
+    - name: disable plaintext login
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: "^#PasswordAuthentication .*"
+        replace: "PasswordAuthentication no"
+
+    - name: set ssh port
+      replace: dest=/etc/ssh/sshd_config regexp="^Port .*"  replace="Port {{custom_ssh_port}}"
+
+    #- name: turn on security updates
+    #  command: env DEBIAN_FRONTEND=noninteractive dpkg-reconfigure --priority=low unattended-upgrades
+  tags: ['basic']

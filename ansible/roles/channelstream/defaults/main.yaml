@@ -1,0 +1,5 @@
+channelstream_admin_secret: admin_secret
+channelstream_secret: secret
+channelstream_rundir: /home/channelstream/channelstream
+channelstream_virtualenv_dir: /home/channelstream/env
+channelstream_virtualenv_python: python3

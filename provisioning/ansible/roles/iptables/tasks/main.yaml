@@ -1,5 +1,0 @@
-  - name: basic iptables
-    template: src=iptables.rules.jinja2 dest=/etc/iptables.rules
-
-  - name: copy ifup script
-    copy: src=restore-iptables dest=/etc/network/if-pre-up.d/restore-iptables owner=root group=root mode=750

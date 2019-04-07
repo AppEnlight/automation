@@ -1,0 +1,8 @@
+- name: changing hostnames
+  block:
+    - name: change hostname
+      lineinfile: dest=/etc/hosts line="127.0.0.1 {{hostname}}"
+
+    - name: hostnamectl
+      hostname: name={{hostname}}
+  tags: ['hostname']

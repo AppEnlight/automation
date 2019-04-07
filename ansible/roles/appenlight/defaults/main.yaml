@@ -1,0 +1,12 @@
+appenlight_encryption_secret: ENCRYPTION_SECRET
+appenlight_authtkt_secret: AUTHTKT_SECRET
+appenlight_redis_session_secret: REDIS_SESSION_SECRET
+appenlight_repos: /home/appenlight/repos
+appenlight_rundir: /home/appenlight/appenlight
+appenlight_virtualenv_dir: /home/appenlight/env
+appenlight_virtualenv_python: python3
+appenlight_repo: https://github.com/AppEnlight/appenlight.git
+appenlight_repo_branch: master
+appenlight_uptime_repo: https://github.com/AppEnlight/appenlight-uptime-ce.git
+appenlight_uptime_repo_branch: master
+appenlight_secure_cookies: true

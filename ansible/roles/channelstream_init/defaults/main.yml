@@ -1,0 +1,6 @@
+---
+channelstream_user: channelstream
+channelstream_group: channelstream
+channelstream_rundir: /home/channelstream/channelstream
+channelstream_virtualenv_dir: /home/channelstream/env
+channelstream_virtualenv_python: python3

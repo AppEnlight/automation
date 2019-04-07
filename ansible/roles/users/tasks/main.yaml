@@ -1,0 +1,8 @@
+- name: installing nginx
+  block:
+  - include_tasks: actions.yaml
+    with_items: "{{users_accounts}}"
+    loop_control:
+      loop_var: user
+
+  tags: ['users']

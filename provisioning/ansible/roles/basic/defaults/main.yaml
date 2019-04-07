@@ -1,3 +1,0 @@
-fail2ban_whitelist:
-fail2ban_bantime: 660
-custom_ssh_port: 22

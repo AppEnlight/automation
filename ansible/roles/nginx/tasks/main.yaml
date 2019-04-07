@@ -1,0 +1,77 @@
+- name: installing nginx
+  block:
+    - name: install pycurl if missing
+      apt: pkg=python-pycurl state=present
+      register: error_handler
+      until: error_handler is success
+      retries: 99
+      delay: 15
+
+    - name: Add an Apt signing key
+      apt_key:
+        url: http://nginx.org/keys/nginx_signing.key
+        state: present
+
+    - name: add nginx repo
+      apt_repository:
+        repo: "deb http://nginx.org/packages/mainline/ubuntu/ {{ansible_distribution_release}} nginx"
+        state: present
+        update_cache: true
+
+    - name: install latest nginx
+      apt:
+        pkg: nginx
+        state: present
+
+    - command: apt-get clean
+
+    - name: create keys dir
+      file:
+        path: /etc/nginx/keys
+        state: directory
+        mode: 0700
+
+    - name: create dhparam
+      command: openssl dhparam -out /etc/nginx/keys/dhparam.pem 2048
+      args:
+        creates: /etc/nginx/keys/dhparam.pem
+
+    - name: set dhparam permissions
+      file:
+        path: /etc/nginx/keys/dhparam.pem
+        mode: 0600
+
+    - name: create default site self-signed cert
+      command: openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -keyout /etc/nginx/keys/default_cert.key -out /etc/nginx/keys/default_cert.crt -subj "/C=PL/ST=Poland/L=Warsaw/O=Webreactor/OU=SpecOPS/CN=default.com"
+      args:
+        creates: /etc/nginx/keys/default_cert.crt
+
+    - name: template default config
+      template:
+        src: nginx.conf.jinja2
+        dest: /etc/nginx/nginx.conf
+
+    - name: customize the server
+      template:
+        src: customized.conf.jinja2
+        dest: /etc/nginx/conf.d/customized.conf
+
+    - name: ensure letsencrypt exists
+      file:
+        path: /usr/share/nginx/letsencrypt
+        mode: 0751
+        group: nginx
+        state: directory
+
+    - file:
+        path: /usr/share/nginx/letsencrypt/.well-known
+        mode: 0751
+        group: nginx
+        state: directory
+
+    - name: Make sure a service is running
+      service:
+        state: started
+        name: nginx
+        enabled: yes
+  tags: ['nginx']

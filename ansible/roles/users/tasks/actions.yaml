@@ -1,0 +1,27 @@
+- name: adding users
+  block:
+
+    - set_fact:
+
+    - name: create users
+      user:
+        name: "{{ user.user }}"
+        groups: "{{ user.groups if user.groups is defined else [] }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 4096
+        ssh_key_type: rsa
+        shell: /bin/bash
+
+    - name: set home permissions
+      file:
+        path: "/home/{{ user.user }}"
+        mode: 0750
+
+    - name: Configure user keys
+      authorized_key:
+        user: "{{ user.user }}"
+        state: present
+        key: "{{ lookup('file', users_accounts_keys_dir + '/' + user.user ) }}"
+      when: user.key is defined
+
+  tags: ['users']

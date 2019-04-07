@@ -1,0 +1,46 @@
+- name: installing nodejs
+  block:
+
+    - name: Add an Apt signing key, uses whichever key is at the URL
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+
+    - name: add nodejs repo
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/node_{{nodejs_version}} {{ansible_distribution_release}} main"
+        state: present
+        update_cache: true
+
+    - name: install nodejs
+      apt:
+        pkg: nodejs
+        state: present
+      register: error_handler
+      until: error_handler is success
+      retries: 99
+      delay: 15
+
+    - name: Add an Apt signing key, uses whichever key is at the URL
+      apt_key:
+        url: https://dl.yarnpkg.com/debian/pubkey.gpg
+        state: present
+
+    - name: add yarn repo
+      apt_repository:
+        repo: "deb https://dl.yarnpkg.com/debian/ stable main"
+        state: present
+        update_cache: true
+
+    - name: install yarn
+      apt:
+        pkg: yarn
+        state: present
+      register: error_handler
+      until: error_handler is success
+      retries: 99
+      delay: 15
+
+    - name: cleanup
+      command: apt-get clean
+  tags: ['nodejs']

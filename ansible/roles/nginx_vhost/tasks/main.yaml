@@ -1,0 +1,10 @@
+- name: create vhost
+  block:
+    - name: create nginx vhosts
+      template:
+        src: nginx-vhost.jinja2
+        dest: /etc/nginx/conf.d/vhost_{{ item.name }}.conf
+      with_items: "{{nginx_vhost_vhosts}}"
+      notify: restart webserver
+    - meta: flush_handlers
+  tags: ['nginx_vhost']

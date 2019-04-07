@@ -1,0 +1,27 @@
+- name: create vhost
+  block:
+    - name: create self signed domain certs
+      command: openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -keyout /etc/nginx/keys/{{item}}.key -out /etc/nginx/keys/{{item}}.crt -subj "/C=PL/ST=Germany/L=Berlin/O=Unknown/OU=SpecOPS/CN={{item}}"
+      args:
+        creates: /etc/nginx/keys/{{item}}.crt
+      with_items: "{{nginx_certificates_self_signed}}"
+
+    - name: set cert permissions
+      file:
+        path: /etc/nginx/keys/{{ item }}.crt
+        mode: 0600
+      with_items: "{{nginx_certificates_self_signed}}"
+
+    - name: set cert permissions
+      file:
+        path: /etc/nginx/keys/{{ item }}.key
+        mode: 0600
+      with_items: "{{nginx_certificates_self_signed}}"
+
+    - name: install SSL certs
+      copy:
+        src: "{{ item }}"
+        dest: "/etc/nginx/keys"
+        mode: 0600
+      with_items: "{{lookup('fileglob', '{{nginx_certificates_dir}}', wantlist=True)}}"
+  tags: ['nginx_certificates']

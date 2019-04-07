@@ -1,0 +1,6 @@
+---
+- name: restart channelstream instance
+  service:
+    name: "channelstream"
+    state: restarted
+  listen: restart channelstream

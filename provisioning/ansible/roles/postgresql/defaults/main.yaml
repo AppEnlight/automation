@@ -1,4 +1,0 @@
-postgresql_users: []
-postgresql_databases: []
-postgresql_config_location: /etc/postgresql/9.6/main
-postgresql_version: "9.6"

@@ -1,0 +1,24 @@
+---
+- name: restart appenlight instance
+  service:
+    name: "appenlight"
+    state: restarted
+  listen: restart appenlight
+
+- name: restart appenlight api instance
+  service:
+    name: "appenlight_api"
+    state: restarted
+  listen: restart appenlight_api
+
+- name: restart appenlight celery instance
+  service:
+    name: "appenlight_celery"
+    state: restarted
+  listen: restart appenlight_celery
+
+- name: restart appenlight celery beat instance
+  service:
+    name: "appenlight_celery_beat"
+    state: restarted
+  listen: restart appenlight_celery_beat

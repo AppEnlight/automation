@@ -1,0 +1,10 @@
+  - name: install libvirt if missing
+    apt: pkg={{ item }} state=present
+    with_items:
+    - qemu-kvm
+    - libvirt-bin
+    - bridge-utils
+  register: error_handler
+  until: error_handler is success
+  retries: 99
+  delay: 15

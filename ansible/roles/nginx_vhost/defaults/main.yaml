@@ -1,0 +1,3 @@
+nginx_vhost_vhosts: []
+nginx_vhost_php_pool_dir: /var/run/php5.3
+nginx_vhost_default_listen: 80

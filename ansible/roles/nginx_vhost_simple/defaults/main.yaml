@@ -1,3 +1,4 @@
 nginx_vhost_ssl_certs: []
 nginx_vhost_self_signed_domains: []
 nginx_vhost_simple_vhost_dir: "*"
+nginx_vhost_simple_remote_src: false

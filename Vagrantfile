@@ -21,10 +21,11 @@ Vagrant.configure("2") do |config|
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "ansible/provision_appenlight_vm.yaml"
     ansible.install_mode = "pip"
-    ansible.version = "2.7.1"
+    ansible.version = "2.7.10"
     ansible.extra_vars = {
         hosts: "all",
-        appenlight_secure_cookies: false
+        appenlight_secure_cookies: false,
+        nginx_vhost_simple_vhost_dir: "files/appenlight.dev/vhosts/*"
     }
   end
 
@@ -36,7 +37,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |vb|
      vb.gui = false
-
+     vb.name = "appenlight.dev"
      vb.memory = 4096
      vb.cpus = 2
      # vb.customize ["modifyvm", :id, "--cpuexecutioncap", "60"]

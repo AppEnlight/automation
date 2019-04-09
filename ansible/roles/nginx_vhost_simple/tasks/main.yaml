@@ -4,7 +4,10 @@
     template:
       src: "{{ item }}"
       dest: "/etc/nginx/conf.d/"
-    with_items: "{{lookup('fileglob', '{{nginx_vhost_simple_vhost_dir}}')}}"
+      remote_src: "{{nginx_vhost_simple_remote_src}}"
+    with_fileglob:
+      - "{{nginx_vhost_simple_vhost_dir}}"
+    #with_items: "{{lookup('fileglob', '{{nginx_vhost_simple_vhost_dir}}', wantlist=True)}}"
     notify: restart webserver
   - meta: flush_handlers
   tags: ['nginx_vhost_simple']

@@ -1,35 +1,37 @@
-- name: install basic packages
-  apt: pkg={{ item }} state=present update_cache=true
-  with_items:
-    - build-essential
-    - openjdk-8-jre
+- block:
+    - name: install basic packages
+      apt: pkg={{ item }} state=present update_cache=true
+      with_items:
+        - build-essential
+        - openjdk-8-jre
 
-- name: check if package exists
-  shell: dpkg -l elasticsearch
-  ignore_errors: true
-  register: check_es
+    - name: check if package exists
+      shell: dpkg -l elasticsearch
+      ignore_errors: true
+      register: check_es
 
-- name: install elasticsearch
-  apt: deb=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-6.7.1.deb
-  when: check_es.rc != 0
+    - name: install elasticsearch
+      apt: deb=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-6.7.1.deb
+      when: check_es.rc != 0
 
-- name: add elasticsearch config
-  copy: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml owner=root group=elasticsearch
+    - name: add elasticsearch config
+      copy: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml owner=root group=elasticsearch
 
-- name: change limits
-  lineinfile:
-    path: /etc/elasticsearch/jvm.options
-    regexp: '^-Xms2g'
-    line: '-Xms{{elasticsearch_ram}}'
+    - name: change limits
+      lineinfile:
+        path: /etc/elasticsearch/jvm.options
+        regexp: '^-Xms2g'
+        line: '-Xms{{elasticsearch_ram}}'
 
-- name: change limits
-  lineinfile:
-    path: /etc/elasticsearch/jvm.options
-    regexp: '^-Xmx2g'
-    line: '-Xmx{{elasticsearch_ram}}'
+    - name: change limits
+      lineinfile:
+        path: /etc/elasticsearch/jvm.options
+        regexp: '^-Xmx2g'
+        line: '-Xmx{{elasticsearch_ram}}'
 
-- name: Make sure a service is running
-  service:
-    state: started
-    name: elasticsearch
-    enabled: yes
+    - name: Make sure a service is running
+      service:
+        state: started
+        name: elasticsearch
+        enabled: yes
+  tags: ["elasticsearch"]

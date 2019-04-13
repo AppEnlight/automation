@@ -1,60 +1,60 @@
 ---
-- name: Deploy appenlight service
-  template:
-    src: appenlight.service.jinja2
-    dest: /etc/systemd/system/appenlight.service
-  notify:
-    - reload systemd
-    - restart appenlight
-  vars:
-    appenlight_run_server_name: main
+- block:
+    - name: Deploy appenlight service
+      template:
+        src: appenlight.service.jinja2
+        dest: /etc/systemd/system/appenlight.service
+      notify:
+        - reload systemd
+        - restart appenlight
+      vars:
+        appenlight_run_server_name: main
 
-- name: Deploy appenlight api service
-  template:
-    src: appenlight.service.jinja2
-    dest: /etc/systemd/system/appenlight_api.service
-  notify:
-    - reload systemd
-    - restart appenlight_api
-  vars:
-    appenlight_run_server_name: api
+    - name: Deploy appenlight api service
+      template:
+        src: appenlight.service.jinja2
+        dest: /etc/systemd/system/appenlight_api.service
+      notify:
+        - reload systemd
+        - restart appenlight_api
+      vars:
+        appenlight_run_server_name: api
 
-- name: Deploy appenlight celery service
-  template:
-    src: appenlight_celery.service.jinja2
-    dest: /etc/systemd/system/appenlight_celery.service
-  notify:
-    - reload systemd
-    - restart appenlight_celery
+    - name: Deploy appenlight celery service
+      template:
+        src: appenlight_celery.service.jinja2
+        dest: /etc/systemd/system/appenlight_celery.service
+      notify:
+        - reload systemd
+        - restart appenlight_celery
 
-- name: Deploy appenlight celery beat service
-  template:
-    src: appenlight_celery_beat.service.jinja2
-    dest: /etc/systemd/system/appenlight_celery_beat.service
-  notify:
-    - reload systemd
-    - restart appenlight_celery_beat
+    - name: Deploy appenlight celery beat service
+      template:
+        src: appenlight_celery_beat.service.jinja2
+        dest: /etc/systemd/system/appenlight_celery_beat.service
+      notify:
+        - reload systemd
+        - restart appenlight_celery_beat
 
-- name: Deploy appenlight uptime monitor service
-  template:
-    src: appenlight_uptime.service.jinja2
-    dest: /etc/systemd/system/appenlight_uptime.service
-  notify:
-    - reload systemd
-    - restart appenlight_celery_beat
+    - name: Deploy appenlight uptime monitor service
+      template:
+        src: appenlight_uptime.service.jinja2
+        dest: /etc/systemd/system/appenlight_uptime.service
+      notify:
+        - reload systemd
+        - restart appenlight_celery_beat
 
-- name: Start and enable services
-  service:
-    name: "{{item}}"
-    enabled: true
-    state: restarted
-  with_items:
-    - appenlight
-    - appenlight_api
-    - appenlight_celery
-    - appenlight_celery_beat
-    - appenlight_uptime
+    - name: Start and enable services
+      service:
+        name: "{{item}}"
+        enabled: true
+        state: restarted
+      with_items:
+        - appenlight
+        - appenlight_api
+        - appenlight_celery
+        - appenlight_celery_beat
+        - appenlight_uptime
 
-- meta: flush_handlers
-
-- meta: flush_handlers
+    - meta: flush_handlers
+  tags: ["appenlight_init"]

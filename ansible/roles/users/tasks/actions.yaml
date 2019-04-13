@@ -15,7 +15,7 @@
     - name: set home permissions
       file:
         path: "/home/{{ user.user }}"
-        mode: 0750
+        mode: 0751
 
     - name: Configure user keys
       authorized_key:

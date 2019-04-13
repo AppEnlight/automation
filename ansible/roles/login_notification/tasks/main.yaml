@@ -1,10 +1,12 @@
-- name: template_script
-  template: src=mail_notification.jinja2 dest=/etc/ssh/ssh_alert.sh
+- block:
+  - name: template_script
+    template: src=mail_notification.jinja2 dest=/etc/ssh/ssh_alert.sh
 
-- name: chmod script
-  file:
-    path: /etc/ssh/ssh_alert.sh
-    mode: 0750
+  - name: chmod script
+    file:
+      path: /etc/ssh/ssh_alert.sh
+      mode: 0750
 
-- name: enable the script
-  lineinfile: dest=/etc/pam.d/sshd state=present line="session required pam_exec.so seteuid /etc/ssh/ssh_alert.sh" insertafter=EOF
+  - name: enable the script
+    lineinfile: dest=/etc/pam.d/sshd state=present line="session required pam_exec.so seteuid /etc/ssh/ssh_alert.sh" insertafter=EOF
+  tags: ["login_notification"]

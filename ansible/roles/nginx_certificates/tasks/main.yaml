@@ -1,4 +1,4 @@
-- name: create vhost
+- name: nginx certificates
   block:
     - name: create self signed domain certs
       command: openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -keyout /etc/nginx/keys/{{item}}.key -out /etc/nginx/keys/{{item}}.crt -subj "/C=PL/ST=Germany/L=Berlin/O=Unknown/OU=SpecOPS/CN={{item}}"

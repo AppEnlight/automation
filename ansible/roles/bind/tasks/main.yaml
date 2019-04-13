@@ -1,28 +1,30 @@
-- name: install bind
-  apt: pkg={{ item }} state=present
-  with_items:
-    - bind9
-    - dnsutils
+- block:
+    - name: install bind
+      apt: pkg={{ item }} state=present
+      with_items:
+        - bind9
+        - dnsutils
 
-- command: apt-get clean
+    - command: apt-get clean
 
-- name: include own sites file
-  lineinfile: dest=/etc/bind/named.conf state=present line='include "/etc/bind/named.sites.conf";' insertafter=EOF
+    - name: include own sites file
+      lineinfile: dest=/etc/bind/named.conf state=present line='include "/etc/bind/named.sites.conf";' insertafter=EOF
 
-- name: create zones dir
-  file: path=/etc/bind/zones state=directory
+    - name: create zones dir
+      file: path=/etc/bind/zones state=directory
 
-- name: Do something
-  shell: date -u +"%Y%m%d00"
-  register: zone_serial
+    - name: Do something
+      shell: date -u +"%Y%m%d00"
+      register: zone_serial
 
-- name: set config options
-  template: src=named.conf.options.jinja2 dest=/etc/bind/named.conf.options
+    - name: set config options
+      template: src=named.conf.options.jinja2 dest=/etc/bind/named.conf.options
 
-- name: create zone templates
-  template: src=zone-template.jinja2 dest=/etc/bind/zones/{{ item.origin }}.db
-  with_items: "{{ bind_zones }}"
+    - name: create zone templates
+      template: src=zone-template.jinja2 dest=/etc/bind/zones/{{ item.origin }}.db
+      with_items: "{{ bind_zones }}"
 
-- name: create named sites
-  template: src=named.sites.jinja2 dest=/etc/bind/named.sites.conf
-  with_items: "{{ bind_zones }}"
+    - name: create named sites
+      template: src=named.sites.jinja2 dest=/etc/bind/named.sites.conf
+      with_items: "{{ bind_zones }}"
+  tags: ["bind"]

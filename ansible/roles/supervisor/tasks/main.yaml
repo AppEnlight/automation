@@ -1,18 +1,20 @@
-- name: install basic packages
-  apt: pkg=supervisor state=present
-  register: error_handler
-  until: error_handler is success
-  retries: 99
-  delay: 15
+- block:
+  - name: install basic packages
+    apt: pkg=supervisor state=present
+    register: error_handler
+    until: error_handler is success
+    retries: 99
+    delay: 15
 
-- command: apt-get clean
+  - command: apt-get clean
 
-- name: create override dir
-  file: dest=/etc/systemd/system/supervisor.service.d state=directory
+  - name: create override dir
+    file: dest=/etc/systemd/system/supervisor.service.d state=directory
 
-- name: override systemd defaults
-  copy: src=override.conf dest=/etc/systemd/system/supervisor.service.d/override.conf mode=0740
+  - name: override systemd defaults
+    copy: src=override.conf dest=/etc/systemd/system/supervisor.service.d/override.conf mode=0740
 
-- name: template out
-  template: src={{item.template}} dest=/etc/supervisor/conf.d/{{item.filename}}
-  with_items: "{{supervisor_templates}}"
+  - name: template out
+    template: src={{item.template}} dest=/etc/supervisor/conf.d/{{item.filename}}
+    with_items: "{{supervisor_templates}}"
+  tags: ["supervisor"]

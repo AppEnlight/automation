@@ -7,7 +7,7 @@
     elasticsearch_ram: 1024m
     nginx_default_listen: 80
     nginx_user: www-data
-    appenlight_domain: appenlight.dev
+    appenlight_domain: appenlight_dev
     postfix_fqdn: "{{appenlight_domain}}"
     custom_ssh_port: 9022
     appenlight_admin_password: admin #so we can gen password when invoking VM

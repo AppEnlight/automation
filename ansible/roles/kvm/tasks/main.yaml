@@ -8,3 +8,4 @@
   until: error_handler is success
   retries: 99
   delay: 15
+  tags: ["kvm"]

@@ -1,15 +1,17 @@
 ---
-- name: Deploy channelstream service
-  template:
-    src: channelstream.service.jinja2
-    dest: /etc/systemd/system/channelstream.service
-  notify:
-    - reload systemd
-    - restart channelstream
+- block:
+    - name: Deploy channelstream service
+      template:
+        src: channelstream.service.jinja2
+        dest: /etc/systemd/system/channelstream.service
+      notify:
+        - reload systemd
+        - restart channelstream
 
-- name: Start and enable channelstream service
-  service:
-    name: "channelstream"
-    enabled: true
-    state: restarted
-- meta: flush_handlers
+    - name: Start and enable channelstream service
+      service:
+        name: "channelstream"
+        enabled: true
+        state: restarted
+    - meta: flush_handlers
+  tags: ["channelstream_init"]

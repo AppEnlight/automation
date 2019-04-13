@@ -1,4 +1,4 @@
-- name: installing nginx
+- name: installing postgresql
   block:
     - name: Add an Apt signing key
       apt_key:

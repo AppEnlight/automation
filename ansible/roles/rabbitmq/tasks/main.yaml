@@ -1,22 +1,24 @@
-- name: install basic packages
-  apt: pkg={{ item }} state=present update_cache=true
-  with_items:
-    - rabbitmq-server
+- block:
+  - name: install basic packages
+    apt: pkg={{ item }} state=present update_cache=true
+    with_items:
+      - rabbitmq-server
 
-- name: create vhosts
-  rabbitmq_vhost:
-    name: "{{item}}"
-    state: present
-  with_items: "{{rabbitmq_vhosts}}"
+  - name: create vhosts
+    rabbitmq_vhost:
+      name: "{{item}}"
+      state: present
+    with_items: "{{rabbitmq_vhosts}}"
 
-- name: create users
-  rabbitmq_user:
-    user: "{{item.name}}"
-    password: "{{item.password}}"
-    permissions: "{{item.permissions}}"
-    tags: "{{item.tags}}"
-    state: present
-  with_items: "{{rabbitmq_users}}"
+  - name: create users
+    rabbitmq_user:
+      user: "{{item.name}}"
+      password: "{{item.password}}"
+      permissions: "{{item.permissions}}"
+      tags: "{{item.tags}}"
+      state: present
+    with_items: "{{rabbitmq_users}}"
 
-- name: add admin panel
-  command: rabbitmq-plugins enable rabbitmq_management
+  - name: add admin panel
+    command: rabbitmq-plugins enable rabbitmq_management
+  tags: ["rabbitmq"]

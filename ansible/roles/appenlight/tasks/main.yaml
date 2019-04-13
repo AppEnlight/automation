@@ -1,128 +1,130 @@
-- command: python3 -c "import uuid; print(str(uuid.uuid4()).replace('-',''))"
-  register: tmp_appenlight_admin_auth_token
-
-- set_fact: appenlight_admin_auth_token="{{ tmp_appenlight_admin_auth_token.stdout }}"
-
-- name: install basic packages
-  apt: pkg={{ item }} state=present update_cache=true
-  with_items:
-    - build-essential
-    - git
-    - libffi-dev
-    - libssl-dev
-    - libxslt1-dev
-    - libpq-dev
-    - libev-dev
-    - libevent-dev
-    - libpng-dev
-    - libpq-dev
-    - mercurial
-    - python3-dev
-    - python3-venv
-    - python3-psycopg2
-    - redis-server
-    - supervisor
-
-- command: apt-get clean
-
-- name: place readmes
-  copy:
-    src: appenlight_readme.md
-    dest: "{{item}}"
-  with_items:
-    - /root
-    - /home/vagrant
-    - /home/appenlight
-
 - block:
+    - command: python3 -c "import uuid; print(str(uuid.uuid4()).replace('-',''))"
+      register: tmp_appenlight_admin_auth_token
 
-    - file:
-        path: "{{appenlight_rundir}}"
-        state: directory
-        mode: 0755
+    - set_fact: appenlight_admin_auth_token="{{ tmp_appenlight_admin_auth_token.stdout }}"
 
-    - name: create code repos dir
-      file:
-        path: "{{appenlight_repos}}"
-        state: directory
-        mode: 0755
+    - name: install basic packages
+      apt: pkg={{ item }} state=present update_cache=true
+      with_items:
+        - build-essential
+        - git
+        - libffi-dev
+        - libssl-dev
+        - libxslt1-dev
+        - libpq-dev
+        - libev-dev
+        - libevent-dev
+        - libpng-dev
+        - libpq-dev
+        - mercurial
+        - python3-dev
+        - python3-venv
+        - python3-psycopg2
+        - redis-server
+        - supervisor
 
-    - name: create python venv
-      command: "{{appenlight_virtualenv_python}} -m venv {{appenlight_virtualenv_dir}}"
+    - command: apt-get clean
 
-    - name: checkout appenlight
-      git:
-        repo: "{{ appenlight_repo }}"
-        dest: "{{appenlight_repos}}/appenlight"
-        force: true
-        version: "{{appenlight_repo_branch}}"
+    - name: place readmes
+      copy:
+        src: appenlight_readme.md
+        dest: "{{item}}"
+      with_items:
+        - /root
+        - /home/vagrant
+        - /home/appenlight
 
-    - name: checkout appenlight uptime
-      git:
-        repo: "{{ appenlight_uptime_repo }}"
-        dest: "{{appenlight_repos}}/appenlight_uptime_ce"
-        force: true
-        version: "{{appenlight_uptime_repo_branch}}"
+    - block:
 
-    - name: install pip packages for appenlight
-      pip:
-        requirements: "{{appenlight_repos}}/appenlight/backend/requirements.txt"
-        virtualenv: "{{appenlight_virtualenv_dir}}"
+        - file:
+            path: "{{appenlight_rundir}}"
+            state: directory
+            mode: 0755
 
-    - name: install pip packages for appenlight uptime plugin
-      pip:
-        requirements: "{{appenlight_repos}}/appenlight_uptime_ce/backend/requirements.txt"
-        virtualenv: "{{appenlight_virtualenv_dir}}"
+        - name: create code repos dir
+          file:
+            path: "{{appenlight_repos}}"
+            state: directory
+            mode: 0755
 
-    - name: install appenlight_ce
-      command: "{{appenlight_virtualenv_dir}}/bin/pip install -e ."
-      args:
-        chdir: "{{appenlight_repos}}/appenlight/backend"
+        - name: create python venv
+          command: "{{appenlight_virtualenv_python}} -m venv {{appenlight_virtualenv_dir}}"
 
-    - name: install appenlight_uptime_ce
-      command: "{{appenlight_virtualenv_dir}}/bin/pip install -e ."
-      args:
-        chdir: "{{appenlight_repos}}/appenlight_uptime_ce/backend"
+        - name: checkout appenlight
+          git:
+            repo: "{{ appenlight_repo }}"
+            dest: "{{appenlight_repos}}/appenlight"
+            force: true
+            version: "{{appenlight_repo_branch}}"
 
-    - name: create AE config
-      command: "{{appenlight_virtualenv_dir}}/bin/appenlight-make-config config.ini --domain={{appenlight_domain}} \
-                 --dbstring=postgresql://appenlight:{{appenlight_pg_password}}@127.0.0.1:5432/appenlight"
-      args:
-        chdir: "{{appenlight_rundir}}"
-        creates: "{{appenlight_rundir}}/config.ini"
+        - name: checkout appenlight uptime
+          git:
+            repo: "{{ appenlight_uptime_repo }}"
+            dest: "{{appenlight_repos}}/appenlight_uptime_ce"
+            force: true
+            version: "{{appenlight_uptime_repo_branch}}"
 
-    - name: change secure cookies
-      replace:
-        path: "{{appenlight_rundir}}/config.ini"
-        regexp: '^redis.sessions.cookie_secure'
-        replace: '# redis.sessions.cookie_secure'
-      when: not appenlight_secure_cookies
+        - name: install pip packages for appenlight
+          pip:
+            requirements: "{{appenlight_repos}}/appenlight/backend/requirements.txt"
+            virtualenv: "{{appenlight_virtualenv_dir}}"
 
-    - name: initialize AE db
+        - name: install pip packages for appenlight uptime plugin
+          pip:
+            requirements: "{{appenlight_repos}}/appenlight_uptime_ce/backend/requirements.txt"
+            virtualenv: "{{appenlight_virtualenv_dir}}"
+
+        - name: install appenlight_ce
+          command: "{{appenlight_virtualenv_dir}}/bin/pip install -e ."
+          args:
+            chdir: "{{appenlight_repos}}/appenlight/backend"
+
+        - name: install appenlight_uptime_ce
+          command: "{{appenlight_virtualenv_dir}}/bin/pip install -e ."
+          args:
+            chdir: "{{appenlight_repos}}/appenlight_uptime_ce/backend"
+
+        - name: create AE config
+          command: "{{appenlight_virtualenv_dir}}/bin/appenlight-make-config config.ini --domain={{appenlight_domain}} \
+                     --dbstring=postgresql://appenlight:{{appenlight_pg_password}}@127.0.0.1:5432/appenlight"
+          args:
+            chdir: "{{appenlight_rundir}}"
+            creates: "{{appenlight_rundir}}/config.ini"
+
+        - name: change secure cookies
+          replace:
+            path: "{{appenlight_rundir}}/config.ini"
+            regexp: '^redis.sessions.cookie_secure'
+            replace: '# redis.sessions.cookie_secure'
+          when: not appenlight_secure_cookies
+
+        - name: initialize AE db
+          become_user: appenlight
+          command: "{{appenlight_virtualenv_dir}}/bin/appenlight-migratedb -c config.ini"
+          args:
+            chdir: "{{appenlight_rundir}}"
+
+        - name: populate AE db
+          become_user: appenlight
+          command: "{{appenlight_virtualenv_dir}}/bin/appenlight-initializedb -c config.ini --username admin \
+                     --password {{ appenlight_admin_password }} --email admin@{{appenlight_domain}} --auth-token={{appenlight_admin_auth_token}}"
+          args:
+            chdir: "{{appenlight_rundir}}"
+
+        - name: create AE uptime config
+          template:
+            src: uptime_config.ini.jinja2
+            dest: "{{appenlight_rundir}}/uptime_config.ini"
+
+        - name: create webassets for AE
+          command: "{{appenlight_virtualenv_dir}}/bin/appenlight-static -c config.ini"
+          args:
+            chdir: "{{appenlight_rundir}}"
+
+        - name: initialize AE elasticsearch
+          command: "{{appenlight_virtualenv_dir}}/bin/appenlight-reindex-elasticsearch -c config.ini -t all"
+          args:
+            chdir: "{{appenlight_rundir}}"
       become_user: appenlight
-      command: "{{appenlight_virtualenv_dir}}/bin/appenlight-migratedb -c config.ini"
-      args:
-        chdir: "{{appenlight_rundir}}"
-
-    - name: populate AE db
-      become_user: appenlight
-      command: "{{appenlight_virtualenv_dir}}/bin/appenlight-initializedb -c config.ini --username admin \
-                 --password {{ appenlight_admin_password }} --email admin@{{appenlight_domain}} --auth-token={{appenlight_admin_auth_token}}"
-      args:
-        chdir: "{{appenlight_rundir}}"
-
-    - name: create AE uptime config
-      template:
-        src: uptime_config.ini.jinja2
-        dest: "{{appenlight_rundir}}/uptime_config.ini"
-
-    - name: create webassets for AE
-      command: "{{appenlight_virtualenv_dir}}/bin/appenlight-static -c config.ini"
-      args:
-        chdir: "{{appenlight_rundir}}"
-
-    - name: initialize AE elasticsearch
-      command: "{{appenlight_virtualenv_dir}}/bin/appenlight-reindex-elasticsearch -c config.ini -t all"
-      args:
-        chdir: "{{appenlight_rundir}}"
-  become_user: appenlight
+  tags: ["appenlight"]

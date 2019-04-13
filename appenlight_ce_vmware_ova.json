@@ -1,14 +1,14 @@
 {
   "variables": {
-    "ssh_name": "rcdev",
-    "ssh_pass": "qweqweqwe",
-    "hostname": "rhodecode-appenlight"
+    "ssh_name": "ubuntu",
+    "ssh_pass": "appenlight_admin",
+    "hostname": "appenlight"
   },
   "builders": [
     {
       "type": "vmware-iso",
-      "iso_url": "http://releases.ubuntu.com/16.04/ubuntu-16.04-server-amd64.iso",
-      "iso_checksum": "b8b172cbdf04f5ff8adc8c2c1b4007ccf66f00fc6a324a6da6eba67de71746f6",
+      "iso_url": "http://cdimage.ubuntu.com/releases/18.04.2/release/ubuntu-18.04.2-server-amd64.iso",
+      "iso_checksum": "a2cb36dc010d98ad9253ea5ad5a07fd6b409e3412c48f1860536970b073c98f5",
       "iso_checksum_type": "sha256",
       "output_directory": "rhodecode_appenlight_ce",
       "shutdown_command": "echo '{{user `ssh_pass`}}'|sudo -S shutdown -P now",
@@ -25,7 +25,7 @@
       "ssh_wait_timeout": "30m",
       "vm_name": "rhodecode_appenlight_ce",
       "vmx_data": {
-        "memsize": 1024,
+        "memsize": 4096,
         "displayName": "AppEnlight-CE"
       },
       "vmx_data_post": {

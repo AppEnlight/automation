@@ -1,9 +1,9 @@
 {
   "variables": {
-    "ssh_name": "rcdev",
-    "ssh_pass": "qweqweqwe",
-    "hostname": "rhodecode-appenlight",
-    "source_path": "./ubuntu_xenial/ubuntu_xenial.vmx"
+    "ssh_name": "ubuntu",
+    "ssh_pass": "appenlight_admin",
+    "hostname": "appenlight",
+    "source_path": "./ubuntu_bionic/ubuntu_bionic.vmx"
   },
   "builders": [
     {
@@ -17,7 +17,7 @@
       "output_directory": "rhodecode_appenlight_ce",
       "vm_name": "rhodecode_appenlight_ce",
       "vmx_data": {
-        "memsize": 1024,
+        "memsize": 4096,
         "displayName": "AppEnlight-CE"
       },
       "vmx_data_post": {

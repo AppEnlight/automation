@@ -102,3 +102,4 @@ fabric.properties
 
 /packer_*.zip
 /packer
+/packer_cache

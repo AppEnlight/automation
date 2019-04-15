@@ -2,7 +2,7 @@
 - hosts: "{{hosts}}"
   become: true
   vars:
-    hostname: rhodecode-appenlight
+    hostname: appenlight.local
     ansible_ssh_pipelining: true
     elasticsearch_ram: 1024m
     nginx_default_listen: 80
@@ -24,6 +24,8 @@
     nginx_certificates_self_signed:
         - "{{appenlight_domain}}"
     nginx_vhost_simple_vhost_dir: "files/appenlight.prod/vhosts/*"
+    appenlight_repo_branch: 2.0.0rc1
+    appenlight_uptime_repo_branch: 2.0.0rc1
   roles:
     - role: basic
     - role: users
@@ -39,3 +41,4 @@
     - role: channelstream_init
     - role: appenlight
     - role: appenlight_init
+    - role: hostname

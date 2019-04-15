@@ -1,7 +1,7 @@
 {
   "variables": {
     "ssh_name": "ubuntu",
-    "ssh_pass": "appenlight_admin",
+    "ssh_pass": "ubuntu",
     "hostname": "appenlight"
   },
   "builders": [
@@ -13,7 +13,7 @@
       "iso_url": "http://cdimage.ubuntu.com/releases/18.04.2/release/ubuntu-18.04.2-server-amd64.iso",
       "iso_checksum": "a2cb36dc010d98ad9253ea5ad5a07fd6b409e3412c48f1860536970b073c98f5",
       "iso_checksum_type": "sha256",
-      "output_directory": "rhodecode_appenlight_ce",
+      "output_directory": "rhodecode_appenlight_ce_kvm",
       "shutdown_command": "echo '{{user `ssh_pass`}}'|sudo -S shutdown -P now",
       "disk_size": 204800,
       "format": "qcow2",
@@ -28,26 +28,34 @@
       "ssh_password": "{{user `ssh_pass`}}",
       "ssh_port": 22,
       "ssh_wait_timeout": "30m",
-      "vm_name": "rhodecode_appenlight_ce",
+      "vm_name": "appenlighht",
       "net_device": "virtio-net",
       "disk_interface": "virtio",
       "boot_wait": "5s",
       "boot_command": [
-        "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
-        "/install/vmlinuz noapic ",
-        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/appenlight_preseed.cfg ",
-        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-        "hostname={{user `hostname`}} ",
-        "fb=false debconf/frontend=noninteractive ",
-        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-        "initrd=/install/initrd.gz -- net.ifnames=0 console=ttyS0,115200n8 <enter><enter><enter>"
+        "<esc><wait>",
+        "<esc><wait>",
+        "<enter><wait>",
+        "/install/vmlinuz<wait>",
+        " auto<wait>",
+        " console-setup/ask_detect=false<wait>",
+        " console-setup/layoutcode=us<wait>",
+        " console-setup/modelcode=pc105<wait>",
+        " debconf/frontend=noninteractive<wait>",
+        " debian-installer=en_US<wait>",
+        " fb=false<wait>",
+        " initrd=/install/initrd.gz<wait>",
+        " kbd-chooser/method=us<wait>",
+        " keyboard-configuration/layout=USA<wait>",
+        " keyboard-configuration/variant=USA<wait>",
+        " locale=en_US<wait>",
+        " netcfg/get_domain=vm<wait>",
+        " netcfg/get_hostname=vagrant<wait>",
+        " grub-installer/bootdev=/dev/sda<wait>",
+        " noapic<wait>",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/appenlight_preseed.cfg<wait>",
+        " -- net.ifnames=0 console=ttyS0,115200n8 <wait>",
+        "<enter><wait>"
       ]
     }
   ],
@@ -62,30 +70,25 @@
       "inline": [
         "sleep 15",
         "echo '{{user `ssh_pass`}}'|sudo -S echo 'uname -a'",
-        "echo '{{user `ssh_pass`}}'|sudo -S mv '/tmp/ttyS0.conf' '/etc/init/ttyS0.conf'",
         "echo '{{user `ssh_pass`}}'|sudo -S apt-get clean",
         "echo '{{user `ssh_pass`}}'|sudo -S rm -rf '/var/lib/apt/lists/*'",
         "echo '{{user `ssh_pass`}}'|sudo -S apt-get clean",
         "echo '{{user `ssh_pass`}}'|sudo -S apt-get update",
         "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y upgrade ",
-        "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y install python2.7 python acl ansible python-pexpect"
+        "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y install python2.7 python acl python-pexpect python-setuptools python-pip-whl",
+        "echo '{{user `ssh_pass`}}'|sudo -S sed -i 's/GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"/g' /etc/default/grub",
+        "echo '{{user `ssh_pass`}}'|sudo -S update-grub",
+        "echo '{{user `ssh_pass`}}'|sudo -S sed '/# The primary network /,$d' /etc/network/interfaces",
+        "echo '{{user `ssh_pass`}}'|sudo -S bash -c \"echo # The primary network interface' >> /etc/network/interfaces\"",
+        "echo '{{user `ssh_pass`}}'|sudo -S bash -c \"echo 'auto eth0' >> /etc/network/interfaces\"",
+        "echo '{{user `ssh_pass`}}'|sudo -S bash -c \"echo 'iface eth0 inet dhcp' >> /etc/network/interfaces\""
       ]
     },
     {
       "type": "ansible",
       "user": "{{user `ssh_name`}}",
       "host_alias": "{{user `hostname`}}",
-      "playbook_file": "../ansible/provision_appenlight_vm.yaml",
-      "extra_arguments": [
-        "--extra-vars",
-        "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"
-      ]
-    },
-    {
-      "type": "ansible",
-      "user": "{{user `ssh_name`}}",
-      "host_alias": "{{user `hostname`}}",
-      "playbook_file": "../ansible/zero_provision_machine.yaml",
+      "playbook_file": "ansible/provision_appenlight_vm.yaml",
       "extra_arguments": [
         "--extra-vars",
         "ansible_sudo_pass={{user `ssh_pass`}} hosts={{user `hostname`}}"

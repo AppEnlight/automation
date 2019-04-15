@@ -1,8 +1,8 @@
 {
     "variables": {
         "ssh_name": "ubuntu",
-        "ssh_pass": "appenlight_secret",
-        "hostname": "vm.local"
+        "ssh_pass": "ubuntu",
+        "hostname": "ubuntu"
     },
     "builders": [
         {
@@ -79,7 +79,7 @@
                 "echo '{{user `ssh_pass`}}'|sudo -S apt-get clean",
                 "echo '{{user `ssh_pass`}}'|sudo -S apt-get update",
                 "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y upgrade ",
-                "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y install python2.7 python acl python-pexpect",
+                "echo '{{user `ssh_pass`}}'|sudo -S apt-get -y install python2.7 python acl python-pexpect python-setuptools python-pip-whl",
                 "echo '{{user `ssh_pass`}}'|sudo -S sed -i 's/GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"/g' /etc/default/grub",
                 "echo '{{user `ssh_pass`}}'|sudo -S update-grub",
                 "echo '{{user `ssh_pass`}}'|sudo -S sed '/# The primary network /,$d' /etc/network/interfaces",

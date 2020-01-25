@@ -23,5 +23,5 @@
         src: "{{ item }}"
         dest: "/etc/nginx/keys"
         mode: 0600
-      with_items: "{{lookup('fileglob', '{{nginx_certificates_dir}}', wantlist=True)}}"
+      with_items: "{{lookup('fileglob', '{{nginx_certificates_dir_lookup}}', wantlist=True)}}"
   tags: ['nginx_certificates']

@@ -13,9 +13,9 @@
 
     - name: install latest postgresql
       apt:
-        pkg: "{{item}}"
         state: present
-      with_items:
+        autoclean: true
+        pkg:
           - postgresql-{{postgresql_version}}
           - postgresql-contrib-{{postgresql_version}}
           - python-psycopg2
@@ -23,9 +23,6 @@
       until: error_handler is success
       retries: 99
       delay: 15
-
-    - name: cleanup
-      command: apt-get clean
 
     - name: create postgres users
       become_user: postgres

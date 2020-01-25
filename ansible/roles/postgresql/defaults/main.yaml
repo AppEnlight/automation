@@ -1,4 +1,4 @@
 postgresql_users: []
 postgresql_databases: []
-postgresql_config_location: /etc/postgresql/10/main
-postgresql_version: "10"
+postgresql_config_location: /etc/postgresql/12/main
+postgresql_version: "12"

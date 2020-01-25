@@ -1,2 +1,3 @@
 nginx_certificates_self_signed: []
-nginx_certificates_dir: "*"
+nginx_certificates_dir: "/etc/nginx/keys"
+nginx_certificates_dir_lookup: "*"

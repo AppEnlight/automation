@@ -1,25 +1,25 @@
 - name: installing basics
   block:
     - name: install basics
-      apt: pkg={{ item }} state=present
-      with_items:
-      - sshpass
-      - build-essential
-      - vim
-      - mc
-      - curl
-      - acl
-      - update-motd
-      - update-notifier-common
-      - landscape-common
-      - mercurial
-      - git
+      apt:
+        state: present
+        autoclean: true
+        pkg:
+          - sshpass
+          - build-essential
+          - vim
+          - mc
+          - curl
+          - acl
+          - update-motd
+          - update-notifier-common
+          - landscape-common
+          - mercurial
+          - git
       register: error_handler
       until: error_handler is success
       retries: 99
       delay: 15
-
-    - command: apt-get clean
 
     - name: add pam limits to common session
       lineinfile: dest=/etc/pam.d/common-session state=present line="session required pam_limits.so" insertafter=EOF

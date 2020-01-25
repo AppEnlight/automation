@@ -1,10 +1,12 @@
 ---
-- hosts: "{{hosts}}"
+# set hosts directly when running the playbook
+- hosts: "{{playbook_hosts}}"
   become: true
   vars:
     hostname: appenlight.local
     ansible_ssh_pipelining: true
     elasticsearch_ram: 1024m
+    elasticsearch_cluser_name: appenlight
     nginx_default_listen: 80
     nginx_user: www-data
     appenlight_domain: appenlight_dev

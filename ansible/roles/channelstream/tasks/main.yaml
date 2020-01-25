@@ -1,16 +1,13 @@
 - block:
     - name: install basic packages
-      apt: pkg={{ item }} state=present update_cache=true
-      with_items:
-        - build-essential
-        - git
-    #    - libffi-dev
-    #    - libssl-dev
-    #    - libxslt1-dev
-    #    - libev-dev
-    #    - libevent-dev
-        - python3-dev
-        - python3-venv
+      apt:
+        state: present
+        update_cache: true
+        pkg:
+          - build-essential
+          - git
+          - python3-dev
+          - python3-venv
 
     - block:
         - file:
@@ -29,7 +26,7 @@
 
         - name: install channelstream
           pip:
-            name: channelstream==0.6.14
+            name: "channelstream=={{channelstream_version}}"
             virtualenv: "{{channelstream_virtualenv_dir}}"
       become_user: channelstream
   tags: ["channelstream"]

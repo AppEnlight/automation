@@ -1,11 +1,11 @@
 - block:
     - name: install bind
-      apt: pkg={{ item }} state=present
-      with_items:
-        - bind9
-        - dnsutils
-
-    - command: apt-get clean
+      apt:
+        state: present
+        autoclean: true
+        pkg:
+          - bind9
+          - dnsutils
 
     - name: include own sites file
       lineinfile: dest=/etc/bind/named.conf state=present line='include "/etc/bind/named.sites.conf";' insertafter=EOF

@@ -20,10 +20,9 @@
 
     - name: install latest nginx
       apt:
+        autoclean: true
         pkg: nginx
         state: present
-
-    - command: apt-get clean
 
     - name: create keys dir
       file:

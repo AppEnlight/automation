@@ -1,9 +1,11 @@
 - block:
     - name: install basic packages
-      apt: pkg={{ item }} state=present update_cache=true
-      with_items:
-        - build-essential
-        - openjdk-8-jre
+      apt:
+        update_cache: true
+        autoclean: true
+        pkg:
+          - build-essential
+          - openjdk-8-jre
 
     - name: check if package exists
       shell: dpkg -l elasticsearch
@@ -15,7 +17,11 @@
       when: check_es.rc != 0
 
     - name: add elasticsearch config
-      copy: src=elasticsearch.yml dest=/etc/elasticsearch/elasticsearch.yml owner=root group=elasticsearch
+      template:
+        src: elasticsearch.yml.jinja2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: elasticsearch
 
     - name: change limits
       lineinfile:

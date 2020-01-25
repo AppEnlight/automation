@@ -1,0 +1,4 @@
+playbook_hosts: "all"
+ansible_python_interpreter: "/usr/bin/python3"
+appenlight_secure_cookies: false
+nginx_vhost_simple_vhost_dir: "files/appenlight.dev/vhosts/*"

@@ -2,6 +2,7 @@ Vagrant.configure("2") do |config|
   # Basic stuff, used box and hostname
   config.vm.hostname = "appenlight.dev"
   config.vm.box = "bento/ubuntu-18.04"
+  config.vm.box_version = "201912.14.0"
 
   # Ports configuration
   config.vm.network "forwarded_port", guest: 22, host: 2222  # ssh, it's set by default to 2222
@@ -15,19 +16,16 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 6543, host: 6544  # points2shop
 
   # config.vm.synced_folder "appenlight", "/home/vagrant/appenlight"
+  config.vm.synced_folder ".", "/home/vagrant/.for_provisioning"
 
   # Run provisioning scripts
 
-  config.vm.provision "ansible_local" do |ansible|
-    ansible.playbook = "ansible/provision_appenlight_vm.yaml"
-    ansible.install_mode = "pip"
-    ansible.version = "2.7.10"
-    ansible.extra_vars = {
-        hosts: "all",
-        appenlight_secure_cookies: false,
-        nginx_vhost_simple_vhost_dir: "files/appenlight.dev/vhosts/*"
-    }
-  end
+  config.vm.provision "shell",
+      inline: "sudo apt-get install python3-dev python3-pip python3-venv python3-psycopg2 -y -qq && "\
+        "sudo python3 -m venv /root/ansible_venv && "\
+        "sudo /root/ansible_venv/bin/pip install ansible==2.9.4 psycopg2-binary && "\
+        "sudo /root/ansible_venv/bin/ansible-playbook -i localhost, -c local /home/vagrant/.for_provisioning/ansible/provision_appenlight_vm.yaml \\"\
+        "-e@/home/vagrant/.for_provisioning/ansible/appenlight_vm_extra_vars.yaml"
 
   config.vm.provider "vmware_fusion" do |v|
       v.gui = false
@@ -40,8 +38,5 @@ Vagrant.configure("2") do |config|
      vb.name = "appenlight.dev"
      vb.memory = 4096
      vb.cpus = 2
-     # vb.customize ["modifyvm", :id, "--cpuexecutioncap", "60"]
-     # vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-     # vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
    end
 end

@@ -17,7 +17,7 @@
 #cluster.name: my-application
 
 
-cluster.name: appenlight
+cluster.name: {{elasticsearch_cluser_name}}
 
 
 #
@@ -47,9 +47,6 @@ path.logs: /var/log/elasticsearch
 #
 #bootstrap.memory_lock: true
 
-
-# ERGO
-
 bootstrap.memory_lock: true
 
 #
@@ -65,9 +62,7 @@ bootstrap.memory_lock: true
 #
 #network.host: 192.168.0.1
 
-# ERGO:
-
-network.host: 127.0.0.1
+network.host: {{elasticsearch_network_host}}
 
 #
 # Set a custom port for HTTP:

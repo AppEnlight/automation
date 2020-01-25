@@ -1,8 +1,10 @@
 - block:
   - name: install basic packages
-    apt: pkg={{ item }} state=present update_cache=true
-    with_items:
-      - rabbitmq-server
+    apt:
+      state: present
+      update_cache: true
+      pkg:
+        - rabbitmq-server
 
   - name: create vhosts
     rabbitmq_vhost:

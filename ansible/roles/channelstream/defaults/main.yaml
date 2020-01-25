@@ -1,3 +1,4 @@
+channelstream_version: 0.7.0
 channelstream_admin_secret: admin_secret
 channelstream_secret: secret
 channelstream_rundir: /home/channelstream/channelstream

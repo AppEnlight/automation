@@ -16,6 +16,7 @@
       apt:
         pkg: nodejs
         state: present
+        autoclean: true
       register: error_handler
       until: error_handler is success
       retries: 99
@@ -36,11 +37,10 @@
       apt:
         pkg: yarn
         state: present
+        autoclean: true
       register: error_handler
       until: error_handler is success
       retries: 99
       delay: 15
 
-    - name: cleanup
-      command: apt-get clean
   tags: ['nodejs']
